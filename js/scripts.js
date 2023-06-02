@@ -1,9 +1,9 @@
 document.addEventListener("DOMContentLoaded", function() {
     const apiKey = "26028e87e3290021dda6d400449f9483";
+    const apiUnsplash = "https://source.unsplash.com/1600x900/?";
   
     const cityInput = document.querySelector("#city-input");
     const searchBtn = document.querySelector("#search");
-
 
     const cityElement = document.querySelector("#city");
     const tempElement = document.querySelector("#temperature span");
@@ -14,6 +14,12 @@ document.addEventListener("DOMContentLoaded", function() {
     const windElement = document.querySelector("#wind span");
   
     const weatherContainer = document.querySelector("#weather-data");
+
+    const errorMessageContainer = document.querySelector("#error-message");
+
+    const suggestionContainer = document.querySelector("#suggestions");
+    const suggestionButtons = document.querySelectorAll("#suggestions button");
+
     // Funções
     const getWeatherData = async(city) => {
         const apiWeatherURL = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}&lang=pt_br`;
@@ -24,8 +30,25 @@ document.addEventListener("DOMContentLoaded", function() {
          return data;  
     };
 
+    //Tratamento de erro
+    const showErrorMessage = () => {
+        errorMessageContainer.classList.remove("hide");
+    };
+
+    const hideInformation = () => {
+        errorMessageContainer.classList.add("hide");
+        weatherContainer.classList.add("hide");
+
+        suggestionContainer.classList.add("hide");
+    };
+
     const showWeatherData = async (city) => {
         const data = await getWeatherData(city);
+
+        if (data.cod === "404") {
+            showErrorMessage();
+            return;
+        }
 
         cityElement.innerText = data.name;
         tempElement.innerText = parseInt(data.main.temp);
@@ -40,24 +63,34 @@ document.addEventListener("DOMContentLoaded", function() {
         humidityElement.innerText = `${data.main.humidity}%`;
         windElement.innerText = `${data.wind.speed}km/h`;
 
+        //chance bg image
+        document.body.style.backgroundImage = `url("${apiUnsplash + city}")`;
+
         weatherContainer.classList.remove("hide");
     };
-
-    //Eventos
-    searchBtn.addEventListener("click", function(e) {
+    
+    searchBtn.addEventListener("click", async (e) => {
       e.preventDefault();
-      
+    
       const city = cityInput.value;
-
-      showWeatherData(city); 
+    
+      showWeatherData(city);
     });
-
+    
     cityInput.addEventListener("keyup", (e) => {
-
-        if(e.code === "Enter") {
-            const city = e.target.value
-
-            showWeatherData(city);
-        }
+      if (e.code === "Enter") {
+        const city = e.target.value;
+    
+        showWeatherData(city);
+      }
+    });
+    
+    // Sugestões
+    suggestionButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const city = btn.getAttribute("id");
+    
+        showWeatherData(city);
+      });
     });
   });
